@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Environment Variables and Secrets
+.env
+*.env
+!.env.example
+
+# Development Logs and Personal Study Files
+docs/ARQUITECTURA_Y_DATOS.md
+BITACORA_DESARROLLO.md
+*.log
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Agent and AI Workspaces
+.gemini/
+.antigravity/
+.idx/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
