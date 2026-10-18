@@ -1,0 +1,54 @@
+# Seccion principal que declara los servicios que componen la infraestructura
+services:
+  # Definicion del servicio de base de datos
+  postgres-db:
+    # Imagen oficial de PostgreSQL 15 sobre Alpine Linux 
+    image: postgres:15-alpine
+    # Nombre asignado al contenedor
+    container_name: postgres-db
+    # Politica de reinicio que reanuda el contenedor tras caidas o reinicios del host
+    restart: unless-stopped
+    # Variables de entorno inyectadas al entorno del contenedor
+    environment:
+      # Usuario principal con interpolacion de entorno y valor de fallback local
+      POSTGRES_USER: ${POSTGRES_USER:-editorial_user}
+      # Contraseña de autenticacion con fallback para ejecucion inmediata
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-editorial_pass_local}
+      # Nombre de la base de datos creada en el proceso de inicializacion
+      POSTGRES_DB: ${POSTGRES_DB:-editorial_db}
+    # Mapeo de puertos entre el host y el contenedor
+    ports:
+      # Publica el puerto 5432 del contenedor en el puerto 5432 de la maquina anfitriona
+      - "5432:5432"
+    # Montaje de almacenamiento persistente
+    volumes:
+      # Vincula el volumen con nombre postgres_data a la ruta de datos interna de PostgreSQL
+      - postgres_data:/var/lib/postgresql/data
+    # Asignacion de redes para comunicacion entre servicios
+    networks:
+      # Conecta el contenedor a la red compartida editorial_network
+      - editorial_network
+    # Prueba periodica para verificar disponibilidad operativa del motor de base de datos
+    healthcheck:
+      # Ejecuta el utilitario nativo pg_isready dentro del contenedor
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-editorial_user} -d ${POSTGRES_DB:-editorial_db}" ]
+      # Intervalo de tiempo entre cada ejecucion del chequeo
+      interval: 5s
+      # Tiempo limite maximo concedido para que el comando responda
+      timeout: 5s
+      # Numero de fallos consecutivos antes de marcar el servicio como no saludable
+      retries: 5
+
+# Definicion de volumenes administrados por Docker
+volumes:
+  # Volumen dedicado a la persistencia fisica de PostgreSQL
+  postgres_data:
+    # Controlador estandar de almacenamiento local
+    driver: local
+
+# Definicion de redes virtuales administradas por Docker
+networks:
+  # Red compartida para el aislamiento del cluster
+  editorial_network:
+    # Modo puente para comunicacion interna mediante resolucion DNS nativa
+    driver: bridge
