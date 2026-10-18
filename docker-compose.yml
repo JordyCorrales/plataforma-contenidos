@@ -64,6 +64,25 @@ services:
       postgres-db:
         condition: service_healthy
 
+  # Microservicio de consulta y difusion con GraphQL
+  reader-graphql-service:
+    build:
+      context: ./reader-graphql-service
+      dockerfile: Dockerfile
+    container_name: reader-graphql-service
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://editorial_user:editorial_pass_local@postgres-db:5432/editorial_db}
+    volumes:
+      - ./reader-graphql-service:/app
+    networks:
+      - editorial_network
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
 volumes:
   # Persistencia de datos
   postgres_data:
