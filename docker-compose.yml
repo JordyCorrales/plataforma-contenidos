@@ -43,6 +43,27 @@ services:
       postgres-db:
         condition: service_healthy
 
+  # Microservicio de publicaciones y flujo editorial
+  publications-service:
+    build:
+      context: ./publications-service
+      dockerfile: Dockerfile
+    container_name: publications-service
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://editorial_user:editorial_pass_local@postgres-db:5432/editorial_db}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-clave_secreta_desarrollo_local_cambiar_en_prod}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+    volumes:
+      - ./publications-service:/app
+    networks:
+      - editorial_network
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
 volumes:
   # Persistencia de datos
   postgres_data:
