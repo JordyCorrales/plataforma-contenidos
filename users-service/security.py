@@ -28,16 +28,16 @@ ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 
 
 # Genera token de acceso JWT con tiempo de expiracion
 def create_access_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    token_payload = data.copy()
+    expiration_time = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    token_payload["exp"] = expiration_time
+    return jwt.encode(token_payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
 # Decodifica y verifica la firma del token JWT
 def decode_access_token(token: str) -> Dict[str, Any]:
     try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        return payload
+        decoded_payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return decoded_payload
     except jwt.PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,13 +50,13 @@ security_scheme = HTTPBearer()
 
 # Dependencia para validar token y retornar el payload del usuario
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)) -> Dict[str, Any]:
-    token = credentials.credentials
-    payload = decode_access_token(token)
-    user_id = payload.get("user_id") or payload.get("sub")
+    raw_token = credentials.credentials
+    token_payload = decode_access_token(raw_token)
+    user_id = token_payload.get("user_id") or token_payload.get("sub")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token sin identificador de usuario",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    return payload
+    return token_payload
