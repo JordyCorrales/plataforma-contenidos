@@ -188,5 +188,114 @@ pytest -v test_sistema_completo.py
        }
      }
    }
-   ```
 3. Presionar el botón de ejecución (Play) y confirmar que la respuesta JSON contenga los datos de las publicaciones en estado publicado junto con sus relaciones anidadas.
+
+---
+
+## 6. Ejemplos de Consultas en GraphQL (Puerto 8003)
+
+Todas las consultas pueden ejecutarse ingresando en el navegador a `http://localhost:8003/graphql` 
+
+#### 1. Consulta Simple de Categorías
+Recupera únicamente el identificador y nombre de todas las categorías disponibles:
+
+```graphql
+query ListCategories {
+  listCategories {
+    id
+    name
+  }
+}
+```
+
+#### 2. Consulta de Publicaciones
+Solicita únicamente los datos mínimos indispensables para una lista de titulares, evitando descargar contenido innecesario:
+
+```graphql
+query ListPublicationsMinimal {
+  listPublications(status: "PUBLICADO") {
+    id
+    title
+    status
+  }
+}
+```
+
+#### 3. Filtrado de Publicaciones por Estado Editorial
+Recupera artículos filtrados por el estado deseado (por ejemplo, publicaciones en publicadas):
+
+```graphql
+query ListPublicationsByStatus {
+  listPublications(status: "PUBLICADO") {
+    id
+    title
+    createdAt
+  }
+}
+```
+
+#### 4. Filtrado de Publicaciones por Categoría
+Consulta las publicaciones asociadas a un identificador de categoría específico:
+
+```graphql
+query ListPublicationsByCategory {
+  listPublications(categoryId: 1) {
+    id
+    title
+    status
+    authorId
+  }
+}
+```
+
+#### 5. Consulta con Relacional (Publicación y Categoría)
+Resuelve en una sola petición los datos del artículo junto con la información detallada de la categoría a la que pertenece:
+
+```graphql
+query PublicationsWithCategory {
+  listPublications(status: "PUBLICADO") {
+    id
+    title
+    content
+    status
+    createdAt
+    category {
+      id
+      name
+      description
+    }
+  }
+}
+```
+
+#### 2. Consulta por ID con Historial Completo
+Recupera el detalle completo de una publicación junto con su categoría y la lista cronológica de todas las transiciones de estado y comentarios editoriales:
+
+```graphql
+query GetPublicationFullDetail {
+  getPublication(publicationId: 1) {
+    id
+    title
+    content
+    status
+    authorId
+    categoryId
+    createdAt
+    updatedAt
+    category {
+      id
+      name
+      description
+    }
+    history {
+      id
+      reviewerId
+      previousStatus
+      newStatus
+      comments
+      timestamp
+    }
+  }
+}
+```
+
