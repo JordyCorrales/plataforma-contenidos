@@ -5,7 +5,8 @@ from models import Category, Publication, PublicationStatus
 from schemas import CategoryCreate, PublicationCreate, PublicationUpdate, PublicationStatusUpdate
 from repositories import PublicationRepository
 
-# Matriz de transiciones validas del ciclo editorial
+# IMPORTANTE
+# transiciones validas del ciclo editorial, es una especie de directorio 
 VALID_TRANSITIONS = {
     PublicationStatus.BORRADOR: [PublicationStatus.EN_REVISION],
     PublicationStatus.RECHAZADO: [PublicationStatus.EN_REVISION],
@@ -103,6 +104,7 @@ class PublicationService:
 
         return self.publication_repository.update_publication(publication, update_data)
 
+    #IMPORTANTE
     # Ejecuta transicion de estado editorial con registro de auditoria
     def change_status(
         self,
@@ -111,15 +113,19 @@ class PublicationService:
         reviewer_id: int,
         reviewer_role: str
     ) -> Publication:
+        #obtiene el registro y estado de la publicación 
         publication = self.get_publication(publication_id)
 
+        #Busca dentro del diccionario usando como clave es estado actual
         allowed_target_states = VALID_TRANSITIONS.get(publication.status, [])
+        #compara si el nuevo estado esta dentro de los posibles
         if status_in.new_status not in allowed_target_states:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Transicion no permitida de {publication.status.value} a {status_in.new_status.value}"
             )
 
+        #comprobar si puede realizar el cambio de estado por rol
         if status_in.new_status in [PublicationStatus.APROBADO, PublicationStatus.RECHAZADO]:
             if reviewer_role != "APROBADOR":
                 raise HTTPException(
@@ -127,11 +133,14 @@ class PublicationService:
                     detail="Solo los usuarios con rol APROBADOR pueden aprobar o rechazar publicaciones"
                 )
 
+        #Guarda el estado anterior (ej: BORRADOR)
         previous_status = publication.status
+        #Asigna el nuevo estado (ej: EN_REVISION)
         publication.status = status_in.new_status
+        #guarda los cambios en la base de datos
         self.publication_repository.db_session.commit()
         self.publication_repository.db_session.refresh(publication)
-
+        #registra el cambio en el historial
         self.publication_repository.create_history_entry(
             publication_id=publication.id,
             reviewer_id=reviewer_id,
